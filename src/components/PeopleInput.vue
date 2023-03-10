@@ -1,5 +1,5 @@
 <template>
-    <label>
+    <label :mainKey="mainKey">
         <div class="text-box">
             <p>{{ title }}</p>
             <p class="people-information-alert" v-if="this.value == 0">Can't be zero!</p>
@@ -19,7 +19,8 @@
     export default {
         data() {
             return {
-                value: this.peopleNumber
+                value: this.peopleNumber,
+                mainKey: 1
             }
         },
         props: ['title', 'peopleNumber'],
@@ -27,7 +28,13 @@
             value(newVal){
                 this.$emit('change-people-value', newVal)
             }
+        },
+        created() {
+            window.addEventListener('resize', () => {
+                this.mainKey = this.mainKey + 1; // reload main if there is mobile screen
+            })
         }
+        
     }
 
 </script>
@@ -80,6 +87,9 @@
 
     .red-border{
         border: var(--input-border-size) solid var(--red) !important;
+    }
+
+    @media only screen and (max-width: 375px){
     }
 
 </style>

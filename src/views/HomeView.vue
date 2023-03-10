@@ -1,5 +1,5 @@
 <template>
-  <main>
+  <main :mainKey="mainKey">
     <p class="title">SPLI</p>
     <p class="title">TTER</p>
     <div class="calculator-box">
@@ -19,7 +19,7 @@
             <button class="tip-select tip-button-inactive" id="25" @click="setActive($event.target.id)">25%</button>
             <button class="tip-select tip-button-inactive" id="50" @click="setActive($event.target.id)">50%</button>
             <!-- <button class="tip-select">10%</button> -->
-            <input type="text" class="tip-select tip-input" placeholder="Custom" id="custom" @click="setActive($event.target.id)">
+            <input type="text" class="tip-select tip-input" placeholder="Custom" id="custom" @click="setActive($event.target.id)" v-model="customActiveValue">
           </div>
         </div>
         <PeopleInput 
@@ -52,7 +52,7 @@
             </div>
         </div>
         <div class="right-lower-box">
-          <button class="reset-btn" @click="resetCalculator">Reset</button>
+          <button class="reset-btn" @click="resetCalculator" disabled>Reset</button>
         </div>
       </div>
     </div>
@@ -70,12 +70,19 @@ export default {
   data(){
     return{
       activeBtn: 5,
+      customActiveValue: '',
       billValue: 0,
-      peopleValue: 0,
+      peopleValue: 1,
       tipAmount: 0,
       total: 0,
-      reload: 0
+      reload: 0,
+      mainKey: 1
     }
+  },
+  created(){
+    window.addEventListener('resize', ()=>{
+      this.mainKey = this.mainKey + 1; // reload main if there is mobile screen
+    })
   },
   components: {
     NumberInput,
@@ -103,15 +110,29 @@ export default {
       this.peopleValue = newValue;
     },
     resetCalculator(){
-      this.activeBtn = 5;
       this.billValue = 0;
-      this.peopleValue = 0;
+      this.peopleValue = 1;
       this.tipAmount = 0;
       this.total = 0;
+      this.customActiveValue = '';
       this.reload = this.reload + 1; // reload people and bill components
+      document.querySelector('.reset-btn').setAttribute('disabled', ''); // disable reset button
+
     },
     calculateValue(){
-      console.log('calculate'); // <------ calculate value function (detect NOnumbers in inputs!)
+
+      let tipPercent = NaN;
+      if(this.activeBtn == 'custom'){
+        tipPercent = parseFloat(this.customActiveValue);
+      }else{
+        tipPercent = parseFloat(this.activeBtn);
+      }
+      if(!isNaN(parseInt(this.billValue)) && !isNaN(parseInt(this.peopleValue)) && !isNaN(tipPercent)){
+        let calculatedTip = parseFloat(this.billValue) * tipPercent * 0.01; // transforming into percents
+        this.tipAmount = calculatedTip;
+        this.total = (parseFloat(this.billValue) + calculatedTip) / parseFloat(this.peopleValue);
+        document.querySelector('.reset-btn').removeAttribute('disabled'); // enable reset button
+      }
     }
   },
   watch: {
@@ -122,6 +143,9 @@ export default {
       this.calculateValue();
     },
     peopleValue(){
+      this.calculateValue();
+    },
+    customActiveValue(){
       this.calculateValue();
     }
   }
@@ -179,10 +203,12 @@ export default {
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
+    flex: 1;
   }
 
   .left-box{
     margin-right: 20px;
+    flex: 1;
   }
 
   .tip-select-grid{
@@ -207,7 +233,14 @@ export default {
 
     button:hover{
         background-color: var(--primary);
-        color: var(--neutral-4);
+        color: var(--neutral-1);
+    }
+
+    button:disabled{
+      background-color: var(--primary);
+      pointer-events: none;
+      opacity: 50%;
+      color: var(--neutral-1);
     }
 
     .tip-input{
@@ -272,6 +305,36 @@ export default {
       background-color: var(--neutral-4);
       color: var(--neutral-1);
     }
+
+    @media only screen and (max-width: 375px){
+      main{
+        height: auto;
+        padding-top: 60px;
+      }
+
+      .calculator-box{
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        width: 100vw;
+      }
+
+      .left-box{
+        width: 100%;
+      }
+
+      .right-box{
+        width: 100%;
+        margin: 0;
+        margin-top: var(--big-padding);
+        padding: var(--big-padding);
+      }
+
+      .reset-btn{
+        margin-top: var(--big-padding);
+      }
+    }
+
 
 
 </style>
